@@ -1,0 +1,22 @@
+{
+  "expo": {
+    "name": "AI Süper Uygulama",
+    "slug": "kol-ai-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "platforms": ["ios", "android", "web"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kolai.app",
+      "infoPlist": {
+        "UIBackgroundModes": ["remote-notification"]
+      },
+      "simulator": true
+    },
+    "android": {
+      "package": "com.kolai.app"
+    }
+  }
+}
+
