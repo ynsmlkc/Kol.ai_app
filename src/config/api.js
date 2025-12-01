@@ -1,25 +1,22 @@
-// ✅ Backend API Yapılandırması
+// ✅ BURAYA EKLEDİM: Railway Production URL
+export const API_URL = 'https://web-production-db012.up.railway.app';
 
-// Development (localhost)
-export const API_URL = 'http://localhost:8000/api';
+// Development için localhost kullanmak isterseniz:
+// export const API_URL = 'http://localhost:8000';
 
-// Production (deploy ettiğinizde bu URL'i kullanın)
-// export const API_URL = 'https://your-backend-url.com/api';
-
-// iOS Simülatör için alternatif URL'ler:
-// export const API_URL = 'http://127.0.0.1:8000/api';
-
-// Gerçek iOS cihaz veya Android için:
-// Bilgisayarınızın local IP'sini kullanın
-// export const API_URL = 'http://192.168.1.X:8000/api';
+// ✅ BURAYA EKLEDİM: API Endpoints
+export const API_ENDPOINTS = {
+  register: `${API_URL}/api/register`,
+  login: `${API_URL}/api/login`,
+  me: `${API_URL}/api/me`,
+  usersCount: `${API_URL}/api/users/count`,
+  users: `${API_URL}/api/users`
+};
 
 export default {
   API_URL,
-  ENDPOINTS: {
-    REGISTER: '/register',
-    LOGIN: '/login',
-    ME: '/me',
-    USERS_COUNT: '/users/count',
-  }
+  API_ENDPOINTS
 };
+
+
 
