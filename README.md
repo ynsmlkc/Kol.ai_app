@@ -99,3 +99,4 @@ Bu proje şu anda bir **iskelet yapı** olup, temel navigasyon ve UI akışını
 Bu proje özel bir proje olup, geliştirme aşamasındadır.
 
 # Kol.ai.app_frontend
+# Kol.ai.app_frontend
