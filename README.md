@@ -28,6 +28,7 @@ kol.ai_app/
 - Node.js (v14 veya üzeri)
 - npm veya yarn
 - **macOS**: Xcode (iOS Simülatör için)
+- **Backend**: Docker & Docker Compose (Local test için)
 - **Mobil**: Expo Go uygulaması
 
 ### Kurulum
@@ -37,18 +38,44 @@ kol.ai_app/
 npm install
 ```
 
-2. **iOS'da Çalıştırma (macOS)**:
+2. **⚙️ API Konfigürasyonu (ÖNEMLİ!)**:
+
+**Local Docker Test için:**
 ```bash
-npm run ios
+# Mac IP'nizi bulun:
+ifconfig | grep "inet " | grep -v 127.0.0.1 | awk '{print $2}'
+# Örnek çıktı: 192.168.1.170
+
+# src/config/api.js dosyasını açın
+# LOCAL_IP değişkenini güncelleyin:
+const LOCAL_IP = '192.168.1.170';  // Kendi IP'nizi buraya yazın
 ```
 
-3. **Mobil Cihazda Test**:
+**Production (Railway) için:**
+```javascript
+// Kod zaten ayarlı! Production build'de otomatik Railway kullanılır
+```
+
+3. **Backend'i Başlatın (Local test için)**:
+```bash
+cd ../kol-ai-backend
+docker-compose up -d
+```
+
+4. **iOS'da Çalıştırma (macOS)**:
+```bash
+npm start --clear
+# Açılan terminalde 'i' tuşuna basın (iOS Simulator)
+```
+
+5. **Mobil Cihazda Test**:
 ```bash
 npm start
 # QR kodu Expo Go ile tarayın
 ```
 
 > **🍎 iOS Detaylı Kurulum**: `IOS_KURULUM.md` dosyasına bakın
+> **🐳 Backend Kurulum**: `../kol-ai-backend/README.md` dosyasına bakın
 
 ## 📱 Özellikler
 
@@ -100,3 +127,4 @@ Bu proje özel bir proje olup, geliştirme aşamasındadır.
 
 # Kol.ai.app_frontend
 # Kol.ai.app_frontend
+# Kol.ai_app
