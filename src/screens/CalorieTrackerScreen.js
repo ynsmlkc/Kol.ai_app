@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { 
   View, 
   Text, 
@@ -8,18 +8,48 @@ import {
   TextInput, 
   Image, 
   ActivityIndicator,
-  Alert 
+  Alert,
+  Modal,
+  Animated,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 const CalorieTrackerScreen = ({ navigation }) => {
-  const [foodName, setFoodName] = useState('');
+  const [inputText, setInputText] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
+  const [showActionSheet, setShowActionSheet] = useState(false);
+  const slideAnim = useRef(new Animated.Value(300)).current;
+
+  // Action Sheet Aç/Kapat
+  const openActionSheet = () => {
+    setShowActionSheet(true);
+    Animated.spring(slideAnim, {
+      toValue: 0,
+      useNativeDriver: true,
+      tension: 50,
+      friction: 8,
+    }).start();
+  };
+
+  const closeActionSheet = () => {
+    Animated.timing(slideAnim, {
+      toValue: 300,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => {
+      setShowActionSheet(false);
+    });
+  };
 
   // Kameradan fotoğraf çek
   const takePhoto = async () => {
+    closeActionSheet();
+    
     const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
     
     if (!permissionResult.granted) {
@@ -36,12 +66,14 @@ const CalorieTrackerScreen = ({ navigation }) => {
 
     if (!result.canceled) {
       setSelectedImage(result.assets[0].uri);
-      setResult(null); // Eski sonucu temizle
+      setResult(null);
     }
   };
 
   // Galeriden fotoğraf seç
   const pickImage = async () => {
+    closeActionSheet();
+    
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (!permissionResult.granted) {
@@ -58,13 +90,25 @@ const CalorieTrackerScreen = ({ navigation }) => {
 
     if (!result.canceled) {
       setSelectedImage(result.assets[0].uri);
-      setResult(null); // Eski sonucu temizle
+      setResult(null);
     }
+  };
+
+  // PDF Yükle (placeholder)
+  const uploadPDF = () => {
+    closeActionSheet();
+    Alert.alert('Çok Yakında!', 'PDF yükleme özelliği yakında eklenecek!');
+  };
+
+  // Yazarak Gir
+  const openTextInput = () => {
+    closeActionSheet();
+    // Input alanına focus yap (zaten altta var)
   };
 
   // AI Analizi (Şimdilik Mock Data)
   const analyzeFood = async () => {
-    if (!foodName && !selectedImage) {
+    if (!inputText.trim() && !selectedImage) {
       Alert.alert('Eksik Bilgi', 'Lütfen yemek adı girin veya fotoğraf yükleyin!');
       return;
     }
@@ -72,11 +116,11 @@ const CalorieTrackerScreen = ({ navigation }) => {
     setLoading(true);
     setResult(null);
 
-    // 🤖 Mock AI Response (2 saniye bekle, gerçek gibi görünsün)
+    // 🤖 Mock AI Response (2 saniye bekle)
     setTimeout(() => {
       const mockResult = {
-        foodName: foodName || 'Tespit Edilen Yemek',
-        calories: Math.floor(Math.random() * 500) + 200, // 200-700 arası
+        foodName: inputText || 'Tespit Edilen Yemek',
+        calories: Math.floor(Math.random() * 500) + 200,
         protein: Math.floor(Math.random() * 40) + 10,
         carbs: Math.floor(Math.random() * 60) + 20,
         fat: Math.floor(Math.random() * 30) + 5,
@@ -87,141 +131,190 @@ const CalorieTrackerScreen = ({ navigation }) => {
       setLoading(false);
     }, 2000);
 
-    // 🔜 İleride gerçek AI API çağrısı yapılacak:
-    // const response = await fetch(`${API_URL}/api/analyze-food`, {
-    //   method: 'POST',
-    //   body: formData
-    // });
+    // 🔜 İleride gerçek AI API çağrısı yapılacak
   };
 
   // Temizle
   const resetForm = () => {
-    setFoodName('');
+    setInputText('');
     setSelectedImage(null);
     setResult(null);
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.content}>
-        {/* Header */}
-        <Text style={styles.icon}>🍎</Text>
-        <Text style={styles.title}>Kalori Hesaplama</Text>
-        <Text style={styles.subtitle}>AI ile yemek analizü</Text>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={90}
+    >
+      {/* Ana İçerik Alanı */}
+      <ScrollView 
+        style={styles.messagesArea}
+        contentContainerStyle={styles.messagesContent}
+      >
+        {/* Başlangıç Mesajı */}
+        {!result && !selectedImage && !loading && (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyIcon}>🍎</Text>
+            <Text style={styles.emptyTitle}>Kalori Hesaplama</Text>
+            <Text style={styles.emptySubtitle}>
+              Fotoğraf yükleyin veya yemek adı yazın, AI analizini başlatalım!
+            </Text>
+          </View>
+        )}
 
-        {/* Fotoğraf Yükleme Butonları */}
-        <View style={styles.photoButtons}>
-          <TouchableOpacity 
-            style={styles.photoButton} 
-            onPress={takePhoto}
-            disabled={loading}
-          >
-            <Text style={styles.photoButtonIcon}>📷</Text>
-            <Text style={styles.photoButtonText}>Fotoğraf Çek</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.photoButton} 
-            onPress={pickImage}
-            disabled={loading}
-          >
-            <Text style={styles.photoButtonIcon}>🖼️</Text>
-            <Text style={styles.photoButtonText}>Galeriden Seç</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Seçilen Fotoğraf */}
+        {/* Seçilen Fotoğraf (Bubble Tarzı) */}
         {selectedImage && (
-          <View style={styles.imageContainer}>
-            <Image source={{ uri: selectedImage }} style={styles.image} />
+          <View style={styles.userBubble}>
+            <Image source={{ uri: selectedImage }} style={styles.bubbleImage} />
             <TouchableOpacity 
               style={styles.removeImageButton} 
               onPress={() => setSelectedImage(null)}
             >
-              <Text style={styles.removeImageText}>❌</Text>
+              <Text style={styles.removeImageText}>✕</Text>
             </TouchableOpacity>
           </View>
         )}
 
-        {/* Veya Yazarak Gir */}
-        <View style={styles.divider}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>VEYA</Text>
-          <View style={styles.dividerLine} />
-        </View>
+        {/* Loading */}
+        {loading && (
+          <View style={styles.aiBubble}>
+            <ActivityIndicator color="#007AFF" size="small" />
+            <Text style={styles.aiLoadingText}>  Analiz ediliyor...</Text>
+          </View>
+        )}
+
+        {/* Sonuç Kartı (AI Response Bubble) */}
+        {result && (
+          <View style={styles.aiBubble}>
+            <Text style={styles.aiTitle}>📊 Analiz Sonucu</Text>
+            
+            <View style={styles.resultInfo}>
+              <Text style={styles.foodName}>{result.foodName}</Text>
+              <Text style={styles.portion}>{result.portion}</Text>
+            </View>
+
+            <View style={styles.nutritionGrid}>
+              <View style={styles.nutritionBox}>
+                <Text style={styles.nutritionValue}>{result.calories}</Text>
+                <Text style={styles.nutritionLabel}>Kalori (kcal)</Text>
+              </View>
+
+              <View style={styles.nutritionBox}>
+                <Text style={styles.nutritionValue}>{result.protein}g</Text>
+                <Text style={styles.nutritionLabel}>Protein</Text>
+              </View>
+
+              <View style={styles.nutritionBox}>
+                <Text style={styles.nutritionValue}>{result.carbs}g</Text>
+                <Text style={styles.nutritionLabel}>Karbonhidrat</Text>
+              </View>
+
+              <View style={styles.nutritionBox}>
+                <Text style={styles.nutritionValue}>{result.fat}g</Text>
+                <Text style={styles.nutritionLabel}>Yağ</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity style={styles.newAnalysisButton} onPress={resetForm}>
+              <Text style={styles.newAnalysisText}>🔄 Yeni Analiz</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Alt Input Bar (ChatGPT Tarzı) */}
+      <View style={styles.inputBar}>
+        {/* + Butonu */}
+        <TouchableOpacity 
+          style={styles.plusButton} 
+          onPress={openActionSheet}
+          disabled={loading}
+        >
+          <Text style={styles.plusButtonText}>+</Text>
+        </TouchableOpacity>
 
         {/* Text Input */}
         <TextInput
-          style={styles.input}
-          placeholder="Yemek adı girin (örn: 'Tavuk göğsü 200gr')"
-          placeholderTextColor="#555"
-          value={foodName}
-          onChangeText={setFoodName}
+          style={styles.messageInput}
+          placeholder="Bir yemek yazın veya fotoğraf yükleyin..."
+          placeholderTextColor="#888"
+          value={inputText}
+          onChangeText={setInputText}
           editable={!loading}
+          multiline
+          maxLength={200}
         />
 
-        {/* Analiz Et Butonu */}
+        {/* Gönder Butonu */}
         <TouchableOpacity 
-          style={[styles.analyzeButton, loading && styles.analyzeButtonDisabled]} 
+          style={[styles.sendButton, (!inputText.trim() && !selectedImage) && styles.sendButtonDisabled]}
           onPress={analyzeFood}
-          disabled={loading}
+          disabled={loading || (!inputText.trim() && !selectedImage)}
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.analyzeButtonText}>🤖 AI ile Analiz Et</Text>
-          )}
+          <Text style={styles.sendButtonText}>↑</Text>
         </TouchableOpacity>
-
-        {/* Sonuç Kartı */}
-        {result && (
-          <View style={styles.resultCard}>
-            <Text style={styles.resultTitle}>📊 Analiz Sonucu</Text>
-            
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>Yemek:</Text>
-              <Text style={styles.resultValue}>{result.foodName}</Text>
-            </View>
-
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>Porsiyon:</Text>
-              <Text style={styles.resultValue}>{result.portion}</Text>
-            </View>
-
-            <View style={styles.dividerLine2} />
-
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>🔥 Kalori:</Text>
-              <Text style={styles.resultValueBig}>{result.calories} kcal</Text>
-            </View>
-
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>🥩 Protein:</Text>
-              <Text style={styles.resultValue}>{result.protein}g</Text>
-            </View>
-
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>🍞 Karbonhidrat:</Text>
-              <Text style={styles.resultValue}>{result.carbs}g</Text>
-            </View>
-
-            <View style={styles.resultRow}>
-              <Text style={styles.resultLabel}>🧈 Yağ:</Text>
-              <Text style={styles.resultValue}>{result.fat}g</Text>
-            </View>
-
-            <TouchableOpacity style={styles.resetButton} onPress={resetForm}>
-              <Text style={styles.resetButtonText}>🔄 Yeni Analiz</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-
-        {/* Mock Data Uyarısı */}
-        <Text style={styles.mockWarning}>
-          ⚠️ Şu anda test verileri gösteriliyor. Gerçek AI entegrasyonu yakında!
-        </Text>
       </View>
-    </ScrollView>
+
+      {/* Action Sheet Modal (Kartlar) */}
+      <Modal
+        visible={showActionSheet}
+        transparent
+        animationType="none"
+        onRequestClose={closeActionSheet}
+      >
+        <Pressable style={styles.modalOverlay} onPress={closeActionSheet}>
+          <Animated.View 
+            style={[
+              styles.actionSheet,
+              {
+                transform: [{ translateY: slideAnim }],
+              },
+            ]}
+          >
+            <View style={styles.actionSheetHandle} />
+            
+            <Text style={styles.actionSheetTitle}>Ne yapmak istersiniz?</Text>
+
+            <TouchableOpacity style={styles.actionItem} onPress={takePhoto}>
+              <Text style={styles.actionIcon}>📷</Text>
+              <View style={styles.actionTextContainer}>
+                <Text style={styles.actionTitle}>Fotoğraf Çek</Text>
+                <Text style={styles.actionDesc}>Kamerayı aç ve çek</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.actionItem} onPress={pickImage}>
+              <Text style={styles.actionIcon}>🖼️</Text>
+              <View style={styles.actionTextContainer}>
+                <Text style={styles.actionTitle}>Galeriden Seç</Text>
+                <Text style={styles.actionDesc}>Mevcut fotoğraflardan seç</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.actionItem} onPress={uploadPDF}>
+              <Text style={styles.actionIcon}>📄</Text>
+              <View style={styles.actionTextContainer}>
+                <Text style={styles.actionTitle}>PDF Yükle</Text>
+                <Text style={styles.actionDesc}>Besin listesi PDF'i</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.actionItem} onPress={openTextInput}>
+              <Text style={styles.actionIcon}>✍️</Text>
+              <View style={styles.actionTextContainer}>
+                <Text style={styles.actionTitle}>Yazarak Gir</Text>
+                <Text style={styles.actionDesc}>Yemek adını yazın</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.cancelButton} onPress={closeActionSheet}>
+              <Text style={styles.cancelButtonText}>İptal</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </Pressable>
+      </Modal>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -230,185 +323,259 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#0a0a0a',
   },
-  content: {
+  messagesArea: {
     flex: 1,
-    padding: 20,
-    paddingTop: 10,
   },
-  icon: {
-    fontSize: 50,
-    textAlign: 'center',
-    marginBottom: 10,
+  messagesContent: {
+    padding: 16,
+    paddingBottom: 20,
   },
-  title: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 5,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#888',
-    marginBottom: 25,
-    textAlign: 'center',
-  },
-  photoButtons: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 20,
-  },
-  photoButton: {
-    flex: 1,
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 20,
-    marginHorizontal: 5,
+  // Empty State
+  emptyState: {
     alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#333',
+    justifyContent: 'center',
+    marginTop: 100,
   },
-  photoButtonIcon: {
-    fontSize: 32,
+  emptyIcon: {
+    fontSize: 60,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#fff',
     marginBottom: 8,
   },
-  photoButtonText: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
+  emptySubtitle: {
+    fontSize: 15,
+    color: '#888',
+    textAlign: 'center',
+    paddingHorizontal: 40,
+    lineHeight: 22,
   },
-  imageContainer: {
-    width: '100%',
-    height: 200,
-    marginBottom: 20,
-    borderRadius: 12,
-    overflow: 'hidden',
+  // User Bubble (Fotoğraf)
+  userBubble: {
+    alignSelf: 'flex-end',
+    maxWidth: '80%',
+    marginBottom: 12,
     position: 'relative',
   },
-  image: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 12,
+  bubbleImage: {
+    width: 250,
+    height: 250,
+    borderRadius: 16,
   },
   removeImageButton: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    backgroundColor: 'rgba(0,0,0,0.6)',
-    borderRadius: 20,
-    width: 36,
-    height: 36,
+    top: 8,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderRadius: 16,
+    width: 32,
+    height: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
   removeImageText: {
-    fontSize: 18,
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#333',
-  },
-  dividerLine2: {
-    width: '100%',
-    height: 1,
-    backgroundColor: '#333',
-    marginVertical: 15,
-  },
-  dividerText: {
-    color: '#666',
-    fontSize: 12,
+    fontSize: 16,
+    color: '#fff',
     fontWeight: '600',
-    marginHorizontal: 15,
   },
-  input: {
-    width: '100%',
-    backgroundColor: '#1a1a1a',
-    borderRadius: 12,
-    padding: 16,
-    color: '#fff',
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: '#333',
-    marginBottom: 20,
-  },
-  analyzeButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 12,
-    padding: 18,
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 20,
-  },
-  analyzeButtonDisabled: {
-    backgroundColor: '#555',
-  },
-  analyzeButtonText: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  resultCard: {
-    width: '100%',
+  // AI Bubble (Sonuç)
+  aiBubble: {
+    alignSelf: 'flex-start',
+    maxWidth: '95%',
     backgroundColor: '#1a1a1a',
     borderRadius: 16,
-    padding: 20,
+    padding: 16,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: '#333',
-    marginBottom: 20,
   },
-  resultTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+  aiLoadingText: {
+    color: '#888',
+    fontSize: 14,
+  },
+  aiTitle: {
+    fontSize: 18,
+    fontWeight: '700',
     color: '#fff',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  resultRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     marginBottom: 12,
   },
-  resultLabel: {
-    fontSize: 15,
-    color: '#888',
-    fontWeight: '500',
+  resultInfo: {
+    marginBottom: 16,
   },
-  resultValue: {
-    fontSize: 15,
+  foodName: {
+    fontSize: 16,
+    fontWeight: '600',
     color: '#fff',
+    marginBottom: 4,
+  },
+  portion: {
+    fontSize: 13,
+    color: '#888',
+  },
+  nutritionGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  nutritionBox: {
+    width: '48%',
+    backgroundColor: '#0a0a0a',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  nutritionValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#4CAF50',
+    marginBottom: 4,
+  },
+  nutritionLabel: {
+    fontSize: 11,
+    color: '#888',
+  },
+  newAnalysisButton: {
+    backgroundColor: '#007AFF',
+    borderRadius: 10,
+    padding: 12,
+    alignItems: 'center',
+  },
+  newAnalysisText: {
+    color: '#fff',
+    fontSize: 14,
     fontWeight: '600',
   },
-  resultValueBig: {
-    fontSize: 18,
-    color: '#4CAF50',
+  // Input Bar (Alt)
+  inputBar: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    padding: 12,
+    paddingBottom: Platform.OS === 'ios' ? 28 : 12,
+    backgroundColor: '#0a0a0a',
+    borderTopWidth: 1,
+    borderTopColor: '#222',
+  },
+  plusButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#1a1a1a',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  plusButtonText: {
+    fontSize: 24,
+    color: '#fff',
+    fontWeight: '400',
+  },
+  messageInput: {
+    flex: 1,
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    paddingTop: 10,
+    color: '#fff',
+    fontSize: 15,
+    maxHeight: 100,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  sendButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#007AFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+  },
+  sendButtonDisabled: {
+    backgroundColor: '#333',
+  },
+  sendButtonText: {
+    fontSize: 20,
+    color: '#fff',
     fontWeight: '700',
   },
-  resetButton: {
-    backgroundColor: '#333',
-    borderRadius: 10,
-    padding: 14,
-    alignItems: 'center',
-    marginTop: 15,
+  // Action Sheet (Modal)
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'flex-end',
   },
-  resetButtonText: {
+  actionSheet: {
+    backgroundColor: '#1a1a1a',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 20,
+  },
+  actionSheetHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#444',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 12,
+    marginBottom: 20,
+  },
+  actionSheetTitle: {
+    fontSize: 17,
+    fontWeight: '700',
     color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  mockWarning: {
-    fontSize: 12,
-    color: '#666',
     textAlign: 'center',
-    fontStyle: 'italic',
-    marginTop: 10,
-    marginBottom: 30,
+    marginBottom: 16,
+  },
+  actionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    marginHorizontal: 16,
+    marginBottom: 8,
+    backgroundColor: '#0a0a0a',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#333',
+  },
+  actionIcon: {
+    fontSize: 28,
+    marginRight: 16,
+  },
+  actionTextContainer: {
+    flex: 1,
+  },
+  actionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+    marginBottom: 2,
+  },
+  actionDesc: {
+    fontSize: 13,
+    color: '#888',
+  },
+  cancelButton: {
+    marginHorizontal: 16,
+    marginTop: 8,
+    backgroundColor: '#333',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
 });
 
