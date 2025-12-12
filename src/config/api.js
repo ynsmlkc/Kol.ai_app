@@ -2,7 +2,7 @@
 // Otomatik olarak doğru URL'yi seçer
 
 // 🔧 Local Development için IP (sadece development sırasında kullanılır)
-const LOCAL_IP = '192.168.1.170';  // ⚠️ Mac IP'ni buraya yaz! (ifconfig ile bul)
+const LOCAL_IP = '172.31.157.25';  // ⚠️ Mac IP'ni buraya yaz! (ifconfig ile bul)
 
 // 🚀 Production API (Railway - App Store build için)
 const PRODUCTION_URL = 'https://web-production-db012.up.railway.app';
@@ -10,9 +10,10 @@ const PRODUCTION_URL = 'https://web-production-db012.up.railway.app';
 // 🌍 Environment otomatik seçimi
 const __DEV__ = __DEV__ ?? process.env.NODE_ENV === 'development';
 
+// 🔒 Gateway kullanarak güvenli bağlantı
 export const API_URL = __DEV__
   ? `http://${LOCAL_IP}`        // 🔥 Development: Local Docker Gateway
-  : PRODUCTION_URL;             // 🚀 Production: Railway (App Store)
+  : PRODUCTION_URL;             // 🚀 Production: Railway Gateway (ileride eklenecek)
 
 // 💡 Başka bilgisayarda çalıştırırken:
 // 1. Terminal'de: ifconfig | grep "inet " | grep -v 127.0.0.1

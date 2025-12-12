@@ -1,5 +1,14 @@
 # 📱 App Store Yayınlama Rehberi
 
+> **📝 NOT:** Bu rehber uygulamayı **hızlıca** App Store'a çıkarmak için hazırlanmıştır.
+> 
+> **🔒 Güvenlik:** Production'da şu anda Gateway YOK (Railway'e direkt bağlanıyor).
+> 
+> - **50-100 kullanıcı** topladıktan sonra **Railway Gateway** eklemelisiniz!
+> - Rehber: `RAILWAY_GATEWAY_KURULUM.md` dosyasına bakın.
+
+---
+
 ## ✅ Yapılması Gerekenler
 
 ### 1. 🌐 API URL Kontrolü (ÖNEMLİ!)
@@ -7,8 +16,9 @@
 **Durum:** ✅ Hallettik!
 
 `src/config/api.js` dosyası otomatik olarak:
-- **Development:** Local Docker kullanır (`http://192.168.1.170`)
-- **Production Build:** Railway kullanır (`https://web-production-db012.up.railway.app`)
+- **Development:** Local Docker Gateway kullanır (`http://172.31.157.25`)
+- **Production Build:** Railway Backend kullanır (`https://web-production-db012.up.railway.app`)
+  - ⚠️ İleride Gateway eklenecek (50-100 kullanıcıda)
 
 **Test Et:**
 ```bash

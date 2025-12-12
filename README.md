@@ -113,18 +113,56 @@ Bu proje şu anda bir **iskelet yapı** olup, temel navigasyon ve UI akışını
 
 ## 🔄 Sonraki Adımlar
 
-- [ ] Backend API entegrasyonu
-- [ ] Kullanıcı kimlik doğrulama sistemi
+- [x] ~~Backend API entegrasyonu~~ ✅ (Railway FastAPI)
+- [x] ~~Kullanıcı kimlik doğrulama sistemi~~ ✅ (JWT + AsyncStorage)
+- [x] ~~Local Docker Gateway~~ ✅ (Nginx)
+- [ ] **Railway Gateway** (50-100 kullanıcıda - Bkz: `RAILWAY_GATEWAY_KURULUM.md`)
 - [ ] PDF işleme kütüphanesi entegrasyonu
 - [ ] Kalori hesaplama API'si entegrasyonu
-- [ ] AI model entegrasyonları
-- [ ] Veri saklama (AsyncStorage/SQLite)
-- [ ] UI/UX iyileştirmeleri
+- [ ] AI model entegrasyonları (OpenAI/Claude)
+- [ ] Push Notifications
+- [ ] App Store yayınlama ✅ (Bkz: `APP_STORE_HAZIRLIK.md`)
+
+---
+
+## 🔒 Güvenlik ve Mimari
+
+### **Şu Anki Mimari:**
+
+```
+Local Development:
+  iPhone Simulator
+       ↓
+  Docker Gateway (Nginx) 🐳
+       ↓
+  Docker Backend (FastAPI)
+
+Production (App Store):
+  Kullanıcılar
+       ↓
+  Railway Backend (FastAPI) 🚀
+  ⚠️ Henüz Gateway YOK
+```
+
+### **İleride (50-100 Kullanıcı):**
+
+```
+Production:
+  Kullanıcılar
+       ↓
+  Railway Gateway (Nginx) 🔒
+       ↓
+  Railway Backend (Private)
+```
+
+**Dokümanlar:**
+- 🐳 Local Gateway: `docker-compose.yml` (kol-ai-backend klasöründe)
+- 🚀 Railway Gateway Kurulum: `RAILWAY_GATEWAY_KURULUM.md`
+- 📱 App Store Hazırlık: `APP_STORE_HAZIRLIK.md`
+- ⚡ Hızlı Başlangıç: `HIZLI_BASLAT.md`
+
+---
 
 ## 📄 Lisans
 
 Bu proje özel bir proje olup, geliştirme aşamasındadır.
-
-# Kol.ai.app_frontend
-# Kol.ai.app_frontend
-# Kol.ai_app
