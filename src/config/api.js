@@ -24,7 +24,7 @@ export const API_ENDPOINTS = {
   usersCount: `${API_URL}/api/users/count`,
   users: `${API_URL}/api/users`,
   // 🤖 AI Endpoints
-  analyzeFood: `${API_URL}/api/analyze-food`,  // Kalori analizi
+  analyzeFood: `${API_URL}/ai/food-calories`,  // Kalori analizi (OpenAI Vision)
 };
 
 export default {

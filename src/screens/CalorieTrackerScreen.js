@@ -122,24 +122,24 @@ const CalorieTrackerScreen = ({ navigation }) => {
       // Token al
       const token = await AsyncStorage.getItem('access_token');
       
-      // FormData oluştur
+      // FormData oluştur (Backend format: file + note)
       const formData = new FormData();
       
-      // Fotoğraf varsa ekle
+      // Fotoğraf varsa ekle (required by backend)
       if (selectedImage) {
         const uriParts = selectedImage.split('.');
         const fileType = uriParts[uriParts.length - 1];
         
-        formData.append('image', {
+        formData.append('file', {
           uri: selectedImage,
           name: `photo.${fileType}`,
           type: `image/${fileType}`,
         });
       }
       
-      // Text varsa ekle
+      // Text varsa "note" olarak ekle (optional)
       if (inputText.trim()) {
-        formData.append('text', inputText.trim());
+        formData.append('note', inputText.trim());
       }
 
       // Backend'e gönder
@@ -158,15 +158,29 @@ const CalorieTrackerScreen = ({ navigation }) => {
         throw new Error(data.detail || data.message || 'Analiz başarısız');
       }
 
-      // Backend'ten gelen veriyi parse et
-      // Backend'in response formatına göre ayarla
+      // Backend Response Format:
+      // {
+      //   "items": [{ "food_name": "Köfte", "calories_kcal": 450, "protein_g": 35, ... }],
+      //   "total_calories_kcal": 450,
+      //   "general_assumptions": [...],
+      //   "disclaimer_tr": "..."
+      // }
+
+      // İlk item'ı al (genellikle tek yemek olur)
+      const firstItem = data.items && data.items.length > 0 ? data.items[0] : null;
+      
+      if (!firstItem) {
+        throw new Error('Yemek tespit edilemedi. Lütfen daha net bir fotoğraf çekin.');
+      }
+
       const parsedResult = {
-        foodName: data.food_name || data.foodName || 'Tespit Edilen Yemek',
-        calories: data.calories || 0,
-        protein: data.protein || 0,
-        carbs: data.carbs || data.carbohydrates || 0,
-        fat: data.fat || 0,
-        portion: data.portion || data.serving_size || '1 porsiyon',
+        foodName: firstItem.food_name || 'Tespit Edilen Yemek',
+        calories: firstItem.calories_kcal || data.total_calories_kcal || 0,
+        protein: firstItem.protein_g || 0,
+        carbs: firstItem.carbs_g || 0,
+        fat: firstItem.fat_g || 0,
+        portion: firstItem.notes || firstItem.portion || '1 porsiyon',
+        disclaimer: data.disclaimer_tr || '',
       };
 
       setResult(parsedResult);
