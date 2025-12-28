@@ -306,3 +306,5 @@ Production (App Store):
 - 🌍 CDN entegrasyonu
 - 🔄 Load balancing (birden fazla backend)
 
+
+

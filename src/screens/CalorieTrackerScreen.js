@@ -16,6 +16,8 @@ import {
   Pressable
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { API_ENDPOINTS } from '../config/api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const CalorieTrackerScreen = ({ navigation }) => {
   const [inputText, setInputText] = useState('');
@@ -106,7 +108,7 @@ const CalorieTrackerScreen = ({ navigation }) => {
     // Input alanına focus yap (zaten altta var)
   };
 
-  // AI Analizi (Şimdilik Mock Data)
+  // 🤖 Gerçek AI Analizi
   const analyzeFood = async () => {
     if (!inputText.trim() && !selectedImage) {
       Alert.alert('Eksik Bilgi', 'Lütfen yemek adı girin veya fotoğraf yükleyin!');
@@ -116,22 +118,68 @@ const CalorieTrackerScreen = ({ navigation }) => {
     setLoading(true);
     setResult(null);
 
-    // 🤖 Mock AI Response (2 saniye bekle)
-    setTimeout(() => {
-      const mockResult = {
-        foodName: inputText || 'Tespit Edilen Yemek',
-        calories: Math.floor(Math.random() * 500) + 200,
-        protein: Math.floor(Math.random() * 40) + 10,
-        carbs: Math.floor(Math.random() * 60) + 20,
-        fat: Math.floor(Math.random() * 30) + 5,
-        portion: '1 porsiyon (200g)',
-      };
+    try {
+      // Token al
+      const token = await AsyncStorage.getItem('access_token');
       
-      setResult(mockResult);
-      setLoading(false);
-    }, 2000);
+      // FormData oluştur
+      const formData = new FormData();
+      
+      // Fotoğraf varsa ekle
+      if (selectedImage) {
+        const uriParts = selectedImage.split('.');
+        const fileType = uriParts[uriParts.length - 1];
+        
+        formData.append('image', {
+          uri: selectedImage,
+          name: `photo.${fileType}`,
+          type: `image/${fileType}`,
+        });
+      }
+      
+      // Text varsa ekle
+      if (inputText.trim()) {
+        formData.append('text', inputText.trim());
+      }
 
-    // 🔜 İleride gerçek AI API çağrısı yapılacak
+      // Backend'e gönder
+      const response = await fetch(API_ENDPOINTS.analyzeFood, {
+        method: 'POST',
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          // ⚠️ FormData için Content-Type otomatik ayarlanır
+        },
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || data.message || 'Analiz başarısız');
+      }
+
+      // Backend'ten gelen veriyi parse et
+      // Backend'in response formatına göre ayarla
+      const parsedResult = {
+        foodName: data.food_name || data.foodName || 'Tespit Edilen Yemek',
+        calories: data.calories || 0,
+        protein: data.protein || 0,
+        carbs: data.carbs || data.carbohydrates || 0,
+        fat: data.fat || 0,
+        portion: data.portion || data.serving_size || '1 porsiyon',
+      };
+
+      setResult(parsedResult);
+
+    } catch (error) {
+      console.error('AI Analiz Hatası:', error);
+      Alert.alert(
+        'Analiz Hatası', 
+        error.message || 'AI analizi sırasında bir hata oluştu. Lütfen tekrar deneyin.'
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Temizle
