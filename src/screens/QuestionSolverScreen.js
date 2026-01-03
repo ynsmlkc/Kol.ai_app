@@ -20,7 +20,7 @@ const QuestionSolverScreen = ({ navigation }) => {
     {
       id: 1,
       type: 'ai',
-      text: 'Merhaba! Ben soru çözme asistanınım. 🎓\n\nMatematik, fizik, programlama ve diğer derslerdeki sorularınızı fotoğraflayabilir veya yazabilirsiniz.\n\nAdım adım çözüm ve açıklamalar ile öğrenmenize yardımcı olacağım!',
+      text: 'Merhaba! Ben soru çözme asistanınım. \n\nMatematik, fizik, programlama ve diğer derslerdeki sorularınızı fotoğraflayabilir veya yazabilirsiniz.\n\nAdım adım çözüm ve açıklamalar ile öğrenmenize yardımcı olacağım!',
     },
   ]);
   const [inputText, setInputText] = useState('');
@@ -330,18 +330,6 @@ const QuestionSolverScreen = ({ navigation }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="arrow-back" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-        <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>KolAI</Text>
-          <Text style={styles.headerSubtitle}>SORU ÇÖZÜCÜ</Text>
-        </View>
-        <View style={styles.headerRight} />
-      </View>
-
       {/* Messages */}
       <ScrollView
         ref={scrollViewRef}
@@ -413,41 +401,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000000',
-  },
-  // Header
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 60,
-    paddingBottom: 16,
-    backgroundColor: '#0F1119',
-    borderBottomWidth: 1,
-    borderBottomColor: '#1A1A2E',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerCenter: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  headerSubtitle: {
-    fontSize: 11,
-    color: '#8B8B9A',
-    marginTop: 2,
-  },
-  headerRight: {
-    width: 40,
   },
   // Messages
   messagesContainer: {

@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { AuthProvider, useAuth } from '../context/AuthContext';
@@ -80,7 +81,16 @@ const AppStack = () => {
         name="CalorieTracker" 
         component={CalorieTrackerScreen}
         options={{
-          title: 'Kalori Takipçi',
+          headerTitle: () => (
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#FFFFFF' }}>
+                KolAI
+              </Text>
+              <Text style={{ fontSize: 11, color: '#8B8B9A', marginTop: 2 }}>
+                KALORİ ASİSTANI
+              </Text>
+            </View>
+          ),
           headerStyle: {
             backgroundColor: '#0a0a0a',
           },
@@ -157,7 +167,16 @@ const AppStack = () => {
         name="QuestionSolver" 
         component={QuestionSolverScreen}
         options={{
-          title: 'Soru Çözücü',
+          headerTitle: () => (
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ fontSize: 20, fontWeight: 'bold', color: '#FFFFFF' }}>
+                KolAI
+              </Text>
+              <Text style={{ fontSize: 11, color: '#8B8B9A', marginTop: 2 }}>
+                SORU ÇÖZÜCÜ
+              </Text>
+            </View>
+          ),
           headerStyle: {
             backgroundColor: '#0a0a0a',
           },
