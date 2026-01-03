@@ -10,6 +10,7 @@ import {
   Platform,
   Alert
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 
 const RegisterScreen = ({ navigation }) => {
@@ -18,6 +19,8 @@ const RegisterScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleRegister = () => {
     // Validasyonlar
@@ -68,71 +71,95 @@ const RegisterScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContainer}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Kayıt Ol</Text>
-          <Text style={styles.subtitle}>Yeni hesap oluşturun</Text>
+          <Text style={styles.logo}>KolAI</Text>
+          <Text style={styles.tagline}>Hesap Oluştur</Text>
         </View>
 
+        {/* Form */}
         <View style={styles.form}>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Gmail</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="ornek@gmail.com"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoComplete="email"
-            />
-          </View>
+          {/* Email Input */}
+          <TextInput
+            style={styles.input}
+            placeholder="E-posta adresi"
+            placeholderTextColor="#8B8B9A"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoComplete="email"
+          />
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Telefon Numarası</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="5XX XXX XX XX"
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-              maxLength={11}
-            />
-          </View>
+          {/* Phone Input */}
+          <TextInput
+            style={styles.input}
+            placeholder="Telefon numarası (5XX XXX XX XX)"
+            placeholderTextColor="#8B8B9A"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            maxLength={11}
+          />
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Şifre</Text>
+          {/* Password Input */}
+          <View style={styles.passwordContainer}>
             <TextInput
-              style={styles.input}
-              placeholder="En az 6 karakter"
+              style={styles.passwordInput}
+              placeholder="Şifre (en az 6 karakter)"
+              placeholderTextColor="#8B8B9A"
               value={password}
               onChangeText={setPassword}
-              secureTextEntry
+              secureTextEntry={!showPassword}
               autoCapitalize="none"
             />
+            <TouchableOpacity 
+              style={styles.eyeIcon}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Ionicons 
+                name={showPassword ? 'eye-outline' : 'eye-off-outline'} 
+                size={22} 
+                color="#8B8B9A" 
+              />
+            </TouchableOpacity>
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Şifre Tekrar</Text>
+          {/* Confirm Password Input */}
+          <View style={styles.passwordContainer}>
             <TextInput
-              style={styles.input}
-              placeholder="Şifrenizi tekrar girin"
+              style={styles.passwordInput}
+              placeholder="Şifre tekrar"
+              placeholderTextColor="#8B8B9A"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
-              secureTextEntry
+              secureTextEntry={!showConfirmPassword}
               autoCapitalize="none"
             />
+            <TouchableOpacity 
+              style={styles.eyeIcon}
+              onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+            >
+              <Ionicons 
+                name={showConfirmPassword ? 'eye-outline' : 'eye-off-outline'} 
+                size={22} 
+                color="#8B8B9A" 
+              />
+            </TouchableOpacity>
           </View>
 
+          {/* Register Button */}
           <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
             <Text style={styles.registerButtonText}>Kaydol</Text>
           </TouchableOpacity>
+        </View>
 
-          <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>Zaten hesabınız var mı? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.loginLink}>Giriş Yap</Text>
-            </TouchableOpacity>
-          </View>
+        {/* Login Link */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>Zaten hesabınız var mı? </Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.loginLink}>Giriş Yap</Text>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -142,83 +169,90 @@ const RegisterScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#0F1119',
   },
   scrollContainer: {
     flexGrow: 1,
     justifyContent: 'center',
-    padding: 20,
+    paddingHorizontal: 32,
+    paddingVertical: 50,
   },
+  // Header
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 60,
   },
-  title: {
-    fontSize: 32,
+  logo: {
+    fontSize: 56,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
+    color: '#FFFFFF',
+    letterSpacing: 0,
+    marginBottom: 12,
   },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
+  tagline: {
+    fontSize: 15,
+    color: '#8B8B9A',
+    letterSpacing: 0.3,
   },
+  // Form
   form: {
-    backgroundColor: '#fff',
-    borderRadius: 15,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  inputContainer: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
+    marginBottom: 32,
   },
   input: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
-    padding: 15,
+    backgroundColor: '#1A1A2E',
+    borderRadius: 16,
+    padding: 18,
     fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#e0e0e0',
+    color: '#FFFFFF',
+    marginBottom: 16,
+    borderWidth: 0,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#1A1A2E',
+    borderRadius: 16,
+    marginBottom: 16,
+    borderWidth: 0,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 18,
+    fontSize: 16,
+    color: '#FFFFFF',
+  },
+  eyeIcon: {
+    padding: 18,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   registerButton: {
-    backgroundColor: '#007AFF',
-    borderRadius: 10,
-    padding: 16,
+    backgroundColor: '#5B52FF',
+    borderRadius: 16,
+    padding: 18,
     alignItems: 'center',
-    marginTop: 10,
+    marginTop: 8,
   },
   registerButtonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
-  loginContainer: {
+  // Footer
+  footer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 20,
+    alignItems: 'center',
   },
-  loginText: {
+  footerText: {
+    color: '#8B8B9A',
     fontSize: 14,
-    color: '#666',
   },
   loginLink: {
+    color: '#5CDB95',
     fontSize: 14,
-    color: '#007AFF',
-    fontWeight: 'bold',
+    fontWeight: '600',
   },
 });
 
 export default RegisterScreen;
-
-
-

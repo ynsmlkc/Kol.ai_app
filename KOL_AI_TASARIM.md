@@ -281,3 +281,6 @@ Görseldeki KOL.AI tasarımına çok yakın:
 
 
 
+
+
+

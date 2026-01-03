@@ -13,7 +13,8 @@ import {
   Animated,
   KeyboardAvoidingView,
   Platform,
-  Pressable
+  Pressable,
+  Linking
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { API_ENDPOINTS } from '../config/api';
@@ -50,49 +51,121 @@ const CalorieTrackerScreen = ({ navigation }) => {
 
   // Kameradan fotoğraf çek
   const takePhoto = async () => {
-    closeActionSheet();
-    
-    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
-    
-    if (!permissionResult.granted) {
-      Alert.alert('İzin Gerekli', 'Kamera kullanmak için izin vermelisiniz!');
-      return;
-    }
+    try {
+      // Önce izin iste, action sheet'i daha sonra kapat
+      const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+      
+      // İzin alındıktan SONRA action sheet'i kapat
+      closeActionSheet();
+      
+      if (!permissionResult.granted) {
+        // Eğer tekrar sorulamıyorsa, Settings'e yönlendir
+        if (!permissionResult.canAskAgain) {
+          Alert.alert(
+            'Kamera İzni Gerekli',
+            'Fotoğraf çekebilmek için kamera erişimine izin vermelisiniz. Ayarlar\'dan izin verebilirsiniz.',
+            [
+              { text: 'İptal', style: 'cancel' },
+              { 
+                text: 'Ayarları Aç', 
+                onPress: () => Linking.openSettings()
+              }
+            ]
+          );
+        } else {
+          Alert.alert(
+            'İzin Gerekli', 
+            'Kamera kullanmak için izin vermelisiniz. Lütfen tekrar deneyin ve "İzin Ver" seçeneğini seçin.'
+          );
+        }
+        return;
+      }
 
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.7,
-    });
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,  // Eski ama çalışan API
+        allowsEditing: false,
+        quality: 0.8,
+      });
 
-    if (!result.canceled) {
-      setSelectedImage(result.assets[0].uri);
-      setResult(null);
+      if (!result.canceled) {
+        setSelectedImage(result.assets[0].uri);
+        setResult(null);
+      }
+    } catch (error) {
+      console.error('❌ Kamera hatası:', error);
+      Alert.alert('Hata', `Kamera açılırken hata oluştu: ${error.message}`);
     }
   };
 
   // Galeriden fotoğraf seç
   const pickImage = async () => {
-    closeActionSheet();
-    
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    
-    if (!permissionResult.granted) {
-      Alert.alert('İzin Gerekli', 'Galeriye erişmek için izin vermelisiniz!');
-      return;
-    }
+    try {
+      console.log('📸 Galeri açılıyor...');
+      
+      // Önce izin iste, action sheet'i daha sonra kapat
+      console.log('🔐 İzin isteniyor...');
+      const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      // İzin alındıktan SONRA action sheet'i kapat
+      closeActionSheet();
+      console.log('🔐 İzin sonucu:', permissionResult);
+      
+      if (!permissionResult.granted) {
+        console.log('❌ İzin reddedildi');
+        
+        // Eğer tekrar sorulamıyorsa (daha önce reddedilmiş), Settings'e yönlendir
+        if (!permissionResult.canAskAgain) {
+          Alert.alert(
+            'Galeri İzni Gerekli',
+            'Fotoğraf seçebilmek için galeri erişimine izin vermelisiniz. Ayarlar\'dan izin verebilirsiniz.',
+            [
+              { text: 'İptal', style: 'cancel' },
+              { 
+                text: 'Ayarları Aç', 
+                onPress: () => Linking.openSettings()
+              }
+            ]
+          );
+        } else {
+          // İlk kez reddedildi, tekrar deneyebilir
+          Alert.alert(
+            'İzin Gerekli', 
+            'Galeriye erişmek için izin vermelisiniz. Lütfen tekrar deneyin ve "İzin Ver" seçeneğini seçin.'
+          );
+        }
+        return;
+      }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.7,
-    });
+      console.log('✅ İzin verildi, galeri açılıyor...');
+      
+      // Timeout ile galeri açma (30 saniye)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Galeri 30 saniye içinde yanıt vermedi')), 30000);
+      });
+      
+      const result = await Promise.race([
+        ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: false,
+          quality: 0.8,
+        }),
+        timeoutPromise
+      ]);
+      
+      console.log('📸 Galeri kapatıldı, result:', JSON.stringify(result));
 
-    if (!result.canceled) {
-      setSelectedImage(result.assets[0].uri);
-      setResult(null);
+      console.log('📸 Galeri sonucu:', result);
+
+      if (!result.canceled) {
+        console.log('✅ Fotoğraf seçildi:', result.assets[0].uri);
+        setSelectedImage(result.assets[0].uri);
+        setResult(null);
+      } else {
+        console.log('❌ Fotoğraf seçimi iptal edildi');
+      }
+    } catch (error) {
+      console.error('❌ Galeri hatası:', error);
+      Alert.alert('Hata', `Galeri açılırken hata oluştu: ${error.message}`);
     }
   };
 
@@ -142,7 +215,17 @@ const CalorieTrackerScreen = ({ navigation }) => {
         formData.append('note', inputText.trim());
       }
 
-      // Backend'e gönder
+      // Backend'e gönder (30 saniye timeout)
+      console.log('📤 API İsteği Gönderiliyor:', API_ENDPOINTS.analyzeFood);
+      console.log('📤 FormData içeriği:', {
+        hasImage: !!selectedImage,
+        noteText: inputText.trim() || '(boş)',
+        hasToken: !!token,
+      });
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 saniye timeout
+
       const response = await fetch(API_ENDPOINTS.analyzeFood, {
         method: 'POST',
         headers: {
@@ -150,46 +233,173 @@ const CalorieTrackerScreen = ({ navigation }) => {
           // ⚠️ FormData için Content-Type otomatik ayarlanır
         },
         body: formData,
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
+
+      console.log('📥 Response Status:', response.status);
+      console.log('📥 Response OK:', response.ok);
+
       const data = await response.json();
+      console.log('📥 Response Data:', JSON.stringify(data, null, 2));
 
       if (!response.ok) {
         throw new Error(data.detail || data.message || 'Analiz başarısız');
       }
 
-      // Backend Response Format:
-      // {
-      //   "items": [{ "food_name": "Köfte", "calories_kcal": 450, "protein_g": 35, ... }],
-      //   "total_calories_kcal": 450,
-      //   "general_assumptions": [...],
-      //   "disclaimer_tr": "..."
-      // }
+      // Backend Response Format (AI her seferinde farklı döndürüyor, hepsini destekle)
+      let parsedResult;
 
-      // İlk item'ı al (genellikle tek yemek olur)
-      const firstItem = data.items && data.items.length > 0 ? data.items[0] : null;
-      
-      if (!firstItem) {
-        throw new Error('Yemek tespit edilemedi. Lütfen daha net bir fotoğraf çekin.');
+      // Format 1: Standart format (items array)
+      if (data.items && data.items.length > 0) {
+        const firstItem = data.items[0];
+        parsedResult = {
+          foodName: firstItem.food_name || 'Tespit Edilen Yemek',
+          calories: firstItem.calories_kcal || data.total_calories_kcal || 0,
+          protein: firstItem.protein_g || 0,
+          carbs: firstItem.carbs_g || 0,
+          fat: firstItem.fat_g || 0,
+          portion: firstItem.notes || firstItem.portion || '1 porsiyon',
+          disclaimer: data.disclaimer_tr || '',
+        };
       }
-
-      const parsedResult = {
-        foodName: firstItem.food_name || 'Tespit Edilen Yemek',
-        calories: firstItem.calories_kcal || data.total_calories_kcal || 0,
-        protein: firstItem.protein_g || 0,
-        carbs: firstItem.carbs_g || 0,
-        fat: firstItem.fat_g || 0,
-        portion: firstItem.notes || firstItem.portion || '1 porsiyon',
-        disclaimer: data.disclaimer_tr || '',
-      };
+      // Format 2A: AI Türkçe format with nested besin_değerleri
+      else if (data.yemek && data.besin_değerleri) {
+        const besin = data.besin_değerleri;
+        
+        // Helper: Parse değer (number veya "7 g" gibi string olabilir)
+        const parseValue = (val) => {
+          if (typeof val === 'number') return val;
+          if (typeof val === 'string') return parseFloat(val) || 0;
+          if (val?.miktar) return parseFloat(val.miktar) || 0;
+          if (val?.deger) return parseFloat(val.deger) || 0;
+          return 0;
+        };
+        
+        parsedResult = {
+          foodName: data.yemek || 'Tespit Edilen Yemek',
+          calories: parseValue(data.kalori) || parseValue(besin.kalori) || 0,
+          protein: parseValue(besin.protein),
+          carbs: parseValue(besin.karbonhidrat),
+          fat: parseValue(besin.yağ || besin.yag),
+          portion: data.servis_bilgileri?.porsiyon_boyutu || data.porsiyon || '1 porsiyon',
+          disclaimer: 'Bu değerler yaklaşık tahmindir.',
+        };
+      }
+      // Format 2B: AI Türkçe format with direct kalori
+      else if (data.yemek && (data.kalori || data.kalori === 0)) {
+        parsedResult = {
+          foodName: data.yemek || 'Tespit Edilen Yemek',
+          calories: data.kalori || 0,
+          protein: data.protein || 0,
+          carbs: data.karbonhidrat || 0,
+          fat: data.yağ || data.yag || 0,
+          portion: '1 porsiyon',
+          disclaimer: 'Bu değerler yaklaşık tahmindir.',
+        };
+      }
+      // Format 3: AI İngilizce format (meal, nutrition)
+      else if (data.meal && data.nutrition) {
+        const nutrition = data.nutrition;
+        parsedResult = {
+          foodName: data.meal || 'Detected Food',
+          calories: nutrition.calories || 0,
+          protein: nutrition.protein || 0,
+          carbs: nutrition.carbohydrates || 0,
+          fat: nutrition.fat || 0,
+          portion: data.serving_size || '1 serving',
+          disclaimer: 'Bu değerler yaklaşık tahmindir.',
+        };
+      }
+      // Format 4: AI Türkçe format with direct kalori + besin_degerleri (alt çizgi)
+      else if (data.yemek && data.besin_degerleri) {
+        const besin = data.besin_degerleri;
+        
+        // Helper: Parse değer (number, "7 g" string, {miktar: 7}, {deger: 7})
+        const parseValue = (val) => {
+          if (typeof val === 'number') return val;
+          if (typeof val === 'string') return parseFloat(val) || 0;
+          if (val?.miktar) return parseFloat(val.miktar) || 0;
+          if (val?.deger) return parseFloat(val.deger) || 0;
+          return 0;
+        };
+        
+        parsedResult = {
+          foodName: data.yemek || 'Tespit Edilen Yemek',
+          calories: parseValue(data.kalori),
+          protein: parseValue(besin.protein),
+          carbs: parseValue(besin.karbonhidrat),
+          fat: parseValue(besin.yağ || besin.yag),
+          portion: data.servis_boyutu || data.porsiyon || '1 porsiyon',
+          disclaimer: 'Bu değerler yaklaşık tahmindir.',
+        };
+      }
+      // Format 5: AI Türkçe nested format with kalori as object
+      else if (data.yemek && data.kalori && typeof data.kalori === 'object') {
+        const besin = data.besin_degerleri || data.besin_değerleri || {};
+        
+        const parseValue = (val) => {
+          if (typeof val === 'number') return val;
+          if (typeof val === 'string') return parseFloat(val) || 0;
+          if (val?.miktar) return parseFloat(val.miktar) || 0;
+          if (val?.deger) return parseFloat(val.deger) || 0;
+          return 0;
+        };
+        
+        parsedResult = {
+          foodName: data.yemek || 'Tespit Edilen Yemek',
+          calories: parseValue(data.kalori),
+          protein: parseValue(besin.protein),
+          carbs: parseValue(besin.karbonhidrat),
+          fat: parseValue(besin.yag || besin.yağ),
+          portion: '1 porsiyon',
+          disclaimer: 'Bu değerler yaklaşık tahmindir.',
+        };
+      }
+      // Format 6: Backend Vision API format (total_calories_kcal, total_protein_g) ✅ YENİ!
+      else if (data.total_calories_kcal || data.total_calories_kcal === 0) {
+        parsedResult = {
+          foodName: 'Tespit Edilen Yemek',
+          calories: data.total_calories_kcal || 0,
+          protein: data.total_protein_g || 0,
+          carbs: data.total_carbs_g || 0,
+          fat: data.total_fat_g || 0,
+          portion: '1 porsiyon',
+          disclaimer: data.disclaimer_tr || 'Bu değerler yaklaşık tahmindir.',
+        };
+      }
+      // Format yok - hata
+      else {
+        console.error('Tanınmayan format:', data);
+        throw new Error('Yemek tespit edilemedi. Lütfen daha net bir fotoğraf çekin veya yemek adını daha detaylı yazın.');
+      }
 
       setResult(parsedResult);
 
     } catch (error) {
-      console.error('AI Analiz Hatası:', error);
+      console.error('🔴 AI Analiz Hatası:', error);
+      console.error('🔴 Error Details:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+      });
+      
+      let errorMessage = error.message || 'Bilinmeyen hata';
+      
+      // Timeout hatası
+      if (error.name === 'AbortError') {
+        errorMessage = 'İstek zaman aşımına uğradı (30 saniye). Backend çok yavaş veya kapalı olabilir.';
+      }
+      
+      // Network hatası
+      if (error.message.includes('Network') || error.message.includes('Connection')) {
+        errorMessage = `Network Hatası: Backend'e bağlanılamıyor!\n\nURL: ${API_ENDPOINTS.analyzeFood}\n\nRailway backend çalışıyor mu kontrol et!`;
+      }
+      
       Alert.alert(
-        'Analiz Hatası', 
-        error.message || 'AI analizi sırasında bir hata oluştu. Lütfen tekrar deneyin.'
+        '❌ Analiz Hatası', 
+        `${errorMessage}\n\nTerminalde detaylı log var!`
       );
     } finally {
       setLoading(false);
