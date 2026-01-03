@@ -78,6 +78,8 @@ const QuestionSolverScreen = ({ navigation }) => {
       console.log('📤 Soru gönderiliyor...', {
         hasQuestion: !!questionText,
         hasImage: !!imageUri,
+        questionText: questionText,
+        apiUrl: `${API_URL}/ai/solve`,
       });
 
       const response = await fetch(`${API_URL}/ai/solve`, {
