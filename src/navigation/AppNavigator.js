@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { AuthProvider, useAuth } from '../context/AuthContext';
@@ -160,8 +160,17 @@ const AppStack = () => {
       <Stack.Screen 
         name="QuestionSolver" 
         component={QuestionSolverScreen}
-        options={{
-          title: 'Soru Çözücü',
+        options={({ navigation }) => ({
+          headerTitle: () => (
+            <View style={{ alignItems: 'center' }}>
+              <Text style={{ color: '#FFFFFF', fontSize: 21, fontWeight: '600' }}>
+                KolAI
+              </Text>
+              <Text style={{ color: '#a1a1aa', fontSize: 15 }}>
+                Çözücü
+              </Text>
+            </View>
+          ),
           headerStyle: {
             backgroundColor: '#0a0a0a',
           },
@@ -169,7 +178,21 @@ const AppStack = () => {
           headerTitleStyle: {
             color: '#FFFFFF',
           },
-        }}
+          headerBackTitleVisible: false, // "KOL.AI" yazısını kaldır, sadece ok
+          headerRight: () => (
+            <TouchableOpacity 
+              style={{ marginRight: 16 }}
+              onPress={() => {
+                // Menü aksiyonları buraya
+                console.log('3 nokta menü tıklandı');
+              }}
+            >
+              <Text style={{ color: '#FFFFFF', fontSize: 24, letterSpacing: 2 }}>
+                ⋯
+              </Text>
+            </TouchableOpacity>
+          ),
+        })}
       />
       <Stack.Screen 
         name="DocumentAnalysis" 
